@@ -1,10 +1,14 @@
 package main.java;
 
+import java.net.MalformedURLException;
 import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -20,6 +24,7 @@ public class DA_BYZ extends UnicastRemoteObject implements DA_BYZ_RMI{
 	private int rounds;
 	private boolean isFaulty = false;
 	private boolean isGeneral = false;
+	private Map<List<Integer>, Message> recvdMsgs = new HashMap<List<Integer>,Message>();
 	
 	protected DA_BYZ(int pId, String currentProcessName, List<String> processList, List<String> faultyProcesses, boolean faulty) throws RemoteException {
 		super();
@@ -36,8 +41,33 @@ public class DA_BYZ extends UnicastRemoteObject implements DA_BYZ_RMI{
 			this.isGeneral = true;
 		}
 	}
+	
+	public void sendAckMsg(Message m) throws MalformedURLException, RemoteException, NotBoundException{
+		AckMessage aMsg = new AckMessage();
+		aMsg.setCount(m.getCount());
+		aMsg.setReceiver(m.getSender());
+		aMsg.setSender(currProcess);
+		
+		Remote robj = Naming.lookup(m.getSender());
+		
+		DA_BYZ_RMI receiver = (DA_BYZ_RMI) robj;
+		receiver.recvAckMsg(aMsg);
+		
+	}
+	@Override
+	public void recvAckMsg(AckMessage m){
+		
+	}
 	@Override
 	public synchronized String receive(Message m) throws RemoteException {
+		
+		recvdMsgs.put(m.getPath(), m);
+		try {
+			sendAckMsg(m);
+		} catch (MalformedURLException | NotBoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		// Retrieve sender process' clock
 		//VectorClock msgClock= m.getClock();
@@ -52,9 +82,10 @@ public class DA_BYZ extends UnicastRemoteObject implements DA_BYZ_RMI{
 	 * @param neighbour remote destination process 
 	 * @param msg message to be sent to neighbour
 	 */
-	public void sendMessage(String neighbour, Message msg) {
+	@Override
+	public void sendMsg(String lieutenant, Message msg) {
 		try {
-			Remote robj = Naming.lookup(neighbour);
+			Remote robj = Naming.lookup(lieutenant);
 			
 			DA_BYZ_RMI processserver = (DA_BYZ_RMI) robj;
 
@@ -66,56 +97,23 @@ public class DA_BYZ extends UnicastRemoteObject implements DA_BYZ_RMI{
 	}
 	
 	 /** 
-	  * This function broadcasts messages to all the other running peer processes.
+	  * This function broadcasts messages to all the other running lieutenant processes in case of General or broadcasts to other
+	  * lieutenants in case of a sender lieutenant
      */	
 	public void broadcast() {
-		
-		if (isGeneral == true){
-			for (String destProcess : processList){
-				Message msg = new Message(pId, currProcess, destProcess);
+		int count = 0;
+		for (String destProcess : processList){
+			OrderValue order = OrderValue.RETREAT;
+			Message msg = new Message(count, order, currProcess, destProcess);
+			List<Integer> path = msg.getPath();
+			// append process Id to path where allowed
+			if (!path.contains(pId)){
+				path.add(pId);
+				msg.setPath(path);
+				sendMsg(destProcess, msg);
 			}
-		}
-		
+			
 		}
 
-		Message msg;
-		//VectorClock sTimestamp = new VectorClock();
-		synchronized (this) {
-			//vclock.incrementClock(processID);
-			//VectorClock tempVc = VectorClock.copyClock(vclock);
-//			int newVal=vclock.incrementClock(processID).get(processID);
-//			sTimestamp.put(processID, newVal);
-     		//String content = "test message from process " + processID;
-			
-			//msg = new Message(content, processID, tempVc);
-		}
-		//Collections.shuffle(neighbourList);
-		//System.out.printf("CLOCK incremented by %d before sending the message\n", vclock.get(processID));
-		
-//		int delayedIndex = -1;
-//		for (int i = 0; i < neighbourList.size(); i++) {
-//			String neighbour = neighbourList.get(i);
-//			if (this.processID.contains("1") && neighbour.contains("ProcessServer3")) {
-//				delayedIndex = i;
-//			}
-//			
-//			if (i != delayedIndex) {
-//				sendMessage(neighbour, msg);
-//			}
-//		}
-//		if (delayedIndex != -1) {
-//			String delayedNeighbour = neighbourList.get(delayedIndex);
-//			System.out.printf("\n\nDELAYING MSG FROM %s TO %s\n", this.processID, delayedNeighbour);
-//			try {
-//				Thread.sleep(5000);
-//			} catch (InterruptedException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//			VectorClock.printClock(msg.getClock());
-//			sendMessage(delayedNeighbour, msg);
-//		}
-		
-	}
-	
+	}	
 }

@@ -1,11 +1,10 @@
 package main.java;
 
-public class Order{
-	
-	public enum OrderValue{
+public enum OrderValue{
+
 		RETREAT,
-		ATTACK
-	}
+		ATTACK;
+
 	public OrderValue getDefault(){
 		return OrderValue.RETREAT;
 	}
