@@ -1,7 +1,13 @@
 package main.java;
 
 public class Order{
-	public void Order(){
-		
+	
+	public enum OrderValue{
+		RETREAT,
+		ATTACK
 	}
+	public OrderValue getDefault(){
+		return OrderValue.RETREAT;
+	}
+	
 }

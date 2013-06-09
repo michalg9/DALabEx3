@@ -39,6 +39,15 @@ public class DA_BYZ_Main{
     	return neighbourList;
 	}
 
+	public static List<String> getFaultyProcessListFromProperties() {
+
+		String faultyProcess = getPropertyByName("processFaulty");
+		String[] faultyArray = faultyProcess.split(";");
+		List<String> faultyList = Arrays.asList(faultyArray);
+ 
+    	return faultyList;
+	}
+	
 	public static String getPropertyByName(String name) {
 		Properties prop = new Properties();
 
@@ -72,8 +81,17 @@ public class DA_BYZ_Main{
 	    return filteredList;
 
 	}
+	public static boolean checkFaultyProcess(String currentProcessName, List<String> faultyProcess){
+		for (String p : faultyProcess){
+			if (p.equals(currentProcessName))
+				return true;
+		}
+		return false;
+		
+	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws RemoteException {
+		boolean isFaulty = false;
 		int id = Integer.parseInt(args[0]);
 		int portNum = Integer.parseInt(args[1]);
 		try {
@@ -82,12 +100,24 @@ public class DA_BYZ_Main{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		// IP address of the system
 		String ipAddress = getIp();
 		List<String> processList = getProcessListFromProperties();
+
+		List<String> faultyProcesses = getFaultyProcessListFromProperties();
+
 		String processName = getPropertyByName("processName");
 		String bindName = "/" + processName + id;
 		String currentProcessName = "//" + ipAddress + bindName;	
 		System.out.println("Current process name is " + currentProcessName);
+		// Returns true if current process is faulty
+		isFaulty = checkFaultyProcess(currentProcessName, faultyProcesses);
+
+		DA_BYZ byz = new DA_BYZ(id, currentProcessName, processList, faultyProcesses, isFaulty);
+		// Broadcast messages
+		byz.broadcast();
+		
+		
 		
 	}
 }
