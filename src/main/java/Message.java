@@ -12,18 +12,10 @@ public class Message{
 	
 	public Message(int count, OrderValue order, String sender, String receiver){
 		this.setCount(count);
-		this.sender = sender;
-		this.receiver = receiver;
+		this.setSender(sender);
+		this.setReceiver(receiver);
 		this.setVal(order);
 		this.setPath(new LinkedList<Integer>());
-	}
-
-	public String getReceiver() {
-		return receiver;
-	}
-
-	public String getSender() {
-		return sender;
 	}
 
 	public List<Integer> getPath() {
@@ -48,6 +40,22 @@ public class Message{
 
 	public void setVal(OrderValue val) {
 		this.val = val;
+	}
+
+	public String getSender() {
+		return sender;
+	}
+
+	public void setSender(String sender) {
+		this.sender = sender;
+	}
+
+	public String getReceiver() {
+		return receiver;
+	}
+
+	public void setReceiver(String receiver) {
+		this.receiver = receiver;
 	}
 
 }

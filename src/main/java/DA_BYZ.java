@@ -7,6 +7,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -123,17 +124,33 @@ public class DA_BYZ extends UnicastRemoteObject implements DA_BYZ_RMI{
 		
 		// after broadcasting set the state of process as WAITING
 		int count = 0;
+		pState = ProcessState.WAITING;
+		//Message msg;
 		for (String destProcess : processList){
 
-			Message msg = new Message(count, order, currProcess, destProcess);
-			List<Integer> path = msg.getPath();
-			// append process Id to path where allowed
-			if (!path.contains(pId)){
-				path.add(pId);
-				msg.setPath(path);
-				sendMsg(destProcess, msg);
-				pState = ProcessState.WAITING;
+			if (recvdMsgs.isEmpty()){
+			Message	msg = new Message(count, order, currProcess, destProcess);
+			List<Integer> path = new LinkedList<Integer>();
+			path.add(pId);
+			msg.setPath(path);
+			sendMsg(destProcess, msg);
 			}
+			else
+				for (Message msg : recvdMsgs.values()) {
+					List<Integer> path = msg.getPath();
+					msg.setVal(order);
+					msg.setSender(currProcess);
+					msg.setReceiver(destProcess);
+					// ? what about the count
+					
+					// append process Id to path where allowed
+					if (!path.contains(pId)){
+						path.add(pId);
+						msg.setPath(path);
+						sendMsg(destProcess, msg);
+					}
+					
+				}
 			
 		}
 		
