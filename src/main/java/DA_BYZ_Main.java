@@ -92,30 +92,38 @@ public class DA_BYZ_Main{
 
 	public static void main(String[] args) throws RemoteException {
 		boolean isFaulty = false;
-		int id = Integer.parseInt(args[0]);
-		int portNum = Integer.parseInt(args[1]);
-		try {
-			LocateRegistry.createRegistry(portNum);
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		System.setSecurityManager(new RMISecurityManager());
+		try{
+			int id = Integer.parseInt(args[0]);
+			int portNum = Integer.parseInt(args[1]);
+	
+			try {
+				LocateRegistry.createRegistry(portNum);
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			// IP address of the system
+			String ipAddress = getIp();
+			List<String> processList = getProcessListFromProperties();
+	
+			List<String> faultyProcesses = getFaultyProcessListFromProperties();
+	
+			String processName = getPropertyByName("processName");
+			String bindName = "/" + processName + id;
+			String currentProcessName = "//" + ipAddress + bindName;	
+			System.out.println("Current process name is " + currentProcessName);
+			// Returns true if current process is faulty
+			isFaulty = checkFaultyProcess(currentProcessName, faultyProcesses);
+	
+			DA_BYZ byz = new DA_BYZ(id, currentProcessName, processList, faultyProcesses, isFaulty);
+			Naming.rebind(bindName, byz);
+			// Broadcast messages
+			byz.startAlgo();
 		}
-		// IP address of the system
-		String ipAddress = getIp();
-		List<String> processList = getProcessListFromProperties();
-
-		List<String> faultyProcesses = getFaultyProcessListFromProperties();
-
-		String processName = getPropertyByName("processName");
-		String bindName = "/" + processName + id;
-		String currentProcessName = "//" + ipAddress + bindName;	
-		System.out.println("Current process name is " + currentProcessName);
-		// Returns true if current process is faulty
-		isFaulty = checkFaultyProcess(currentProcessName, faultyProcesses);
-
-		DA_BYZ byz = new DA_BYZ(id, currentProcessName, processList, faultyProcesses, isFaulty);
-		// Broadcast messages
-		byz.startAlgo();
+		catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
 		
 		
 		

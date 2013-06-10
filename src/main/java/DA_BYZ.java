@@ -31,6 +31,7 @@ public class DA_BYZ extends UnicastRemoteObject implements DA_BYZ_RMI{
 	private Map<List<Integer>, Message> sentMsgs = new HashMap<List<Integer>,Message>();
 	// Add received messages to evaluation list for later processing
 	private Map<List<Integer>, Message> evalMsgs = new HashMap<List<Integer>,Message>();
+	private int msgSentCounter=0;
 	
 	private ProcessState pState;
 	
@@ -56,7 +57,8 @@ public class DA_BYZ extends UnicastRemoteObject implements DA_BYZ_RMI{
 		// after every round check for state of process, if SAFE broadcast, if WAITING, wait for acknowledgments
 		// if RETIRED do not broadcast.
 		// Set order value to be broadcasted based on fault pattern, if the process is Faulty
-		OrderValue order = OrderValue.RETREAT;
+		
+		OrderValue order = OrderValue.RETREAT;			//order value hard-coded
 		if (pState.equals(ProcessState.SAFE)){
 			broadcast(order);
 		}
@@ -80,6 +82,15 @@ public class DA_BYZ extends UnicastRemoteObject implements DA_BYZ_RMI{
 		// if received ack message has the same count as the sent order message then delete it from the sending queue.
 		// when sending queue is empty set the state of process as SAFE
 		// if process is commander and the queue is empty set the state as RETIRED
+		for (Message sentMsg : sentMsgs.values()) {
+			if (sentMsg.getCount() == m.getCount() ){
+				sentMsgs.remove(sentMsg.getPath());
+			}	
+		}
+		if (sentMsgs.isEmpty()){
+			pState = ProcessState.SAFE;
+		}
+		
 	}
 	@Override
 	public synchronized String receive(Message m) throws RemoteException {
@@ -105,11 +116,12 @@ public class DA_BYZ extends UnicastRemoteObject implements DA_BYZ_RMI{
 			Remote robj = Naming.lookup(lieutenant);
 			
 			DA_BYZ_RMI processserver = (DA_BYZ_RMI) robj;
+			
+			msg.setCount(msgSentCounter++);
 
 			//put the message in sending queue, removed only when ack is received
 			sentMsgs.put(msg.getPath(), msg);
 			
-			//System.out.printf("\nSend msg:( %s, %d) to %s\n", processID, msg.getClock().get(msg.getId()), neighbour);
 			processserver.receive(msg);
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
@@ -123,24 +135,22 @@ public class DA_BYZ extends UnicastRemoteObject implements DA_BYZ_RMI{
 	public void broadcast(OrderValue order) {
 		
 		// after broadcasting set the state of process as WAITING
-		int count = 0;
 		pState = ProcessState.WAITING;
 		//Message msg;
 		for (String destProcess : processList){
 
 			if (recvdMsgs.isEmpty()){
-			Message	msg = new Message(count, order, currProcess, destProcess);
-			List<Integer> path = new LinkedList<Integer>();
-			path.add(pId);
-			msg.setPath(path);
-			sendMsg(destProcess, msg);
+				Message	msg = new Message(msgSentCounter, order, currProcess, destProcess);
+				List<Integer> path = new LinkedList<Integer>();
+				path.add(pId);
+				msg.setPath(path);
+				sendMsg(destProcess, msg);
 			}
-			else
-				for (Message msg : recvdMsgs.values()) {
-					List<Integer> path = msg.getPath();
-					msg.setVal(order);
-					msg.setSender(currProcess);
-					msg.setReceiver(destProcess);
+			else{
+				
+				for (Message m : recvdMsgs.values()) {
+					List<Integer> path = m.getPath();
+					Message	msg = new Message(msgSentCounter, order, currProcess, destProcess);
 					// ? what about the count
 					
 					// append process Id to path where allowed
@@ -151,6 +161,7 @@ public class DA_BYZ extends UnicastRemoteObject implements DA_BYZ_RMI{
 					}
 					
 				}
+			}
 			
 		}
 		

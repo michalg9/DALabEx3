@@ -1,7 +1,13 @@
 package main.java;
 
+import java.io.Serializable;
 
-public class AckMessage{
+
+public class AckMessage implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private int count;
 	private String sender;
 	private String receiver;
