@@ -12,7 +12,7 @@ public class AckMessage{
 		this.setReceiver(receiver);
 
 	}
-
+	
 	public AckMessage() {
 		// TODO Auto-generated constructor stub
 	}

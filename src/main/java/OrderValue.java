@@ -1,7 +1,7 @@
 package main.java;
 
 public enum OrderValue{
-
+	
 		RETREAT,
 		ATTACK;
 

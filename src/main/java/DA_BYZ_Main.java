@@ -115,7 +115,7 @@ public class DA_BYZ_Main{
 
 		DA_BYZ byz = new DA_BYZ(id, currentProcessName, processList, faultyProcesses, isFaulty);
 		// Broadcast messages
-		byz.broadcast();
+		byz.startAlgo();
 		
 		
 		
