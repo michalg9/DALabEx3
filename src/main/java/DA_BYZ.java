@@ -77,7 +77,7 @@ public class DA_BYZ extends UnicastRemoteObject implements DA_BYZ_RMI{
 		receiver.recvAckMsg(aMsg);
 		
 	}
-	@Override
+	
 	public void recvAckMsg(AckMessage m){
 		// if received ack message has the same count as the sent order message then delete it from the sending queue.
 		// when sending queue is empty set the state of process as SAFE
@@ -92,7 +92,7 @@ public class DA_BYZ extends UnicastRemoteObject implements DA_BYZ_RMI{
 		}
 		
 	}
-	@Override
+	
 	public synchronized String receive(Message m) throws RemoteException {
 		
 		recvdMsgs.put(m.getPath(), m);
