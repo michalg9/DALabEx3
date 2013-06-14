@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Message implements Serializable{
+public class Message implements Serializable {
 	/**
 	 * 
 	 */
@@ -14,13 +14,17 @@ public class Message implements Serializable{
 	private String receiver;
 	private OrderValue val;
 	private List<Integer> path;
-	
-	public Message(int count, OrderValue order, String sender, String receiver){
+
+	public Message(int count, OrderValue order, String sender, String receiver) {
 		this.setCount(count);
 		this.setSender(sender);
 		this.setReceiver(receiver);
 		this.setVal(order);
 		this.setPath(new LinkedList<Integer>());
+	}
+
+	public String toString() {
+		return "message";
 	}
 
 	public List<Integer> getPath() {

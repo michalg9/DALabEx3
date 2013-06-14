@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-public class DA_BYZ_Main{
+public class DA_BYZ_Main {
 	public static String getIp() {
 
 		try {
@@ -35,8 +35,8 @@ public class DA_BYZ_Main{
 		String neighboursString = getPropertyByName("processes");
 		String[] neighbourArray = neighboursString.split(";");
 		List<String> neighbourList = Arrays.asList(neighbourArray);
- 
-    	return neighbourList;
+
+		return neighbourList;
 	}
 
 	public static List<String> getFaultyProcessListFromProperties() {
@@ -44,10 +44,10 @@ public class DA_BYZ_Main{
 		String faultyProcess = getPropertyByName("processFaulty");
 		String[] faultyArray = faultyProcess.split(";");
 		List<String> faultyList = Arrays.asList(faultyArray);
- 
-    	return faultyList;
+
+		return faultyList;
 	}
-	
+
 	public static String getPropertyByName(String name) {
 		Properties prop = new Properties();
 
@@ -68,35 +68,38 @@ public class DA_BYZ_Main{
 		return null;
 	}
 
-	public static List<String> removeFromTheList(List<String> list, String element) {
+	public static List<String> removeFromTheList(List<String> list,
+			String element) {
 
 		int indexToRemove = list.indexOf(element);
 		ArrayList<String> filteredList = new ArrayList<String>();
-	    for (int i = 0; i < list.size(); i++) {
-	    	if (i != indexToRemove) {
-	    		filteredList.add(list.get(i));
-	        }  
+		for (int i = 0; i < list.size(); i++) {
+			if (i != indexToRemove) {
+				filteredList.add(list.get(i));
+			}
 		}
 
-	    return filteredList;
+		return filteredList;
 
 	}
-	public static boolean checkFaultyProcess(String currentProcessName, List<String> faultyProcess){
-		for (String p : faultyProcess){
+
+	public static boolean checkFaultyProcess(String currentProcessName,
+			List<String> faultyProcess) {
+		for (String p : faultyProcess) {
 			if (p.equals(currentProcessName))
 				return true;
 		}
 		return false;
-		
+
 	}
 
 	public static void main(String[] args) throws RemoteException {
 		boolean isFaulty = false;
 		System.setSecurityManager(new RMISecurityManager());
-		try{
+		try {
 			int id = Integer.parseInt(args[0]);
 			int portNum = Integer.parseInt(args[1]);
-	
+
 			try {
 				LocateRegistry.createRegistry(portNum);
 			} catch (RemoteException e) {
@@ -106,26 +109,26 @@ public class DA_BYZ_Main{
 			// IP address of the system
 			String ipAddress = getIp();
 			List<String> processList = getProcessListFromProperties();
-	
+
 			List<String> faultyProcesses = getFaultyProcessListFromProperties();
-	
+
 			String processName = getPropertyByName("processName");
 			String bindName = "/" + processName + id;
-			String currentProcessName = "//" + ipAddress + bindName;	
+			String currentProcessName = "//" + ipAddress + bindName;
 			System.out.println("Current process name is " + currentProcessName);
 			// Returns true if current process is faulty
 			isFaulty = checkFaultyProcess(currentProcessName, faultyProcesses);
-	
-			DA_BYZ byz = new DA_BYZ(id, currentProcessName, processList, faultyProcesses, isFaulty);
-			Naming.rebind(bindName, byz);
+
+			DA_BYZ byz = new DA_BYZ(id, currentProcessName, processList,
+					faultyProcesses, isFaulty);
+			Naming.bind(bindName, byz);
+			System.out.println("Tadam...");
+			//System.in.read();
 			// Broadcast messages
 			byz.startAlgo();
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		
-		
-		
+
 	}
 }
